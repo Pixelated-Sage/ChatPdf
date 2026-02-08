@@ -5,11 +5,14 @@ pydantic
 pydantic-settings
 python-multipart
 PyPDF2
+python-docx
+beautifulsoup4
+lxml
 langchain
 langchain-text-splitters
 sentence-transformers
-qdrant-client
+chromadb
 google-genai
+requests
 python-dotenv
-psycopg2-binary
 alembic

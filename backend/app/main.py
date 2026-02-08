@@ -1,55 +1,146 @@
+"""
+ChatPDF API - Main Application Entry Point
+FastAPI app with CORS, routes, and health endpoints
+"""
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
 from .database import engine, Base
 from .routes import upload, documents, chat, conversations
+from .config import settings
 
-# Check for required environment variables
-if not os.getenv("GEMINI_API_KEY"):
-    print("WARNING: GEMINI_API_KEY is not set. Chat functionality will fail.")
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown events."""
+    # Startup
+    print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
+    
+    # Create database tables
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created")
+    
+    # Check Gemini API key
+    if settings.gemini_api_key:
+        print(f"✅ Gemini API key configured (model: {settings.gemini_model})")
+    else:
+        print("⚠️  GEMINI_API_KEY not set in environment")
+    
+    # Check ChromaDB
+    from .services.vector_store import vector_store
+    stats = vector_store.get_collection_stats()
+    print(f"✅ ChromaDB ready ({stats['count']} chunks in collection)")
+    
+    yield
+    
+    # Shutdown
+    print("👋 Shutting down...")
 
-app = FastAPI(title="ChatPDF API")
 
-# Sanitize CORS: Allow localhost for development and common production domains
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    lifespan=lifespan
+)
+
+# CORS Configuration
+# CORS Configuration
+# Allow any localhost port for development and the production domain
+allow_origin_regex = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://chatpdf.vercel.app", # Placeholder for your production URL
+    "https://chatpdf.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
+# Include routers
 app.include_router(upload.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(conversations.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 
-@app.get("/api/debug/vectors")
-async def debug_vectors():
-    from .services.vector_store import vector_store
-    import inspect
-    try:
-        return {
-            "type": str(type(vector_store.client)),
-            "query_points_spec": str(inspect.signature(vector_store.client.query_points))
-        }
-    except Exception as e:
-        return {"error": str(e)}
-# chat.router might be empty for now, but let's include it if it exists
-try:
-    app.include_router(chat.router, prefix="/api")
-except AttributeError:
-    pass
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to ChatPDF API"}
+    """Root endpoint with API info."""
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for production monitoring.
+    Returns status of all services.
+    """
+    from .services.vector_store import vector_store
+    
+    # Check Gemini API key
+    gemini_status = "healthy" if settings.gemini_api_key else "missing_api_key"
+    
+    # Check ChromaDB
+    try:
+        stats = vector_store.get_collection_stats()
+        chroma_status = "healthy"
+        chroma_count = stats["count"]
+    except Exception as e:
+        chroma_status = f"error: {str(e)}"
+        chroma_count = 0
+    
+    # Check uploads directory
+    uploads_dir = settings.upload_directory
+    uploads_status = "healthy" if os.path.exists(uploads_dir) else "missing"
+    
+    overall = "healthy" if all([
+        gemini_status == "healthy",
+        chroma_status == "healthy",
+        uploads_status == "healthy"
+    ]) else "degraded"
+    
+    return {
+        "status": overall,
+        "version": settings.app_version,
+        "services": {
+            "gemini": {
+                "status": gemini_status,
+                "model": settings.gemini_model
+            },
+            "chromadb": {
+                "status": chroma_status,
+                "path": settings.chroma_persist_dir,
+                "chunks": chroma_count
+            },
+            "storage": {
+                "status": uploads_status,
+                "path": uploads_dir
+            }
+        }
+    }
+
+
+@app.get("/api/debug/vectors")
+async def debug_vectors():
+    """Debug endpoint to check vector store status."""
+    from .services.vector_store import vector_store
+    try:
+        stats = vector_store.get_collection_stats()
+        return {
+            "collection": stats["name"],
+            "chunks": stats["count"],
+            "persist_dir": settings.chroma_persist_dir
+        }
+    except Exception as e:
+        return {"error": str(e)}

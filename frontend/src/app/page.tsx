@@ -13,14 +13,14 @@ export default function Home() {
 
       {/* Navigation */}
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Sparkles size={18} />
           </div>
           <span className="text-xl font-bold tracking-tight">ChatPDF</span>
-        </div>
+        </Link>
         <Link href="/upload" className="text-sm font-semibold leading-6 text-foreground hover:text-primary transition-colors">
-          Log in <span aria-hidden="true">&rarr;</span>
+          Upload <span aria-hidden="true">&rarr;</span>
         </Link>
       </nav>
 

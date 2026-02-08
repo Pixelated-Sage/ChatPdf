@@ -1,4 +1,22 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+// Supported document formats
+export const SUPPORTED_FORMATS = {
+  '.pdf': 'PDF Document',
+  '.docx': 'Word Document',
+  '.doc': 'Word Document (Legacy)',
+  '.txt': 'Text File',
+  '.md': 'Markdown File',
+  '.html': 'HTML File',
+  '.htm': 'HTML File',
+};
+
+export const SUPPORTED_EXTENSIONS = Object.keys(SUPPORTED_FORMATS);
+
+export function isFileSupported(filename: string): boolean {
+  const ext = filename.toLowerCase().match(/\.[^.]+$/)?.[0];
+  return ext ? SUPPORTED_EXTENSIONS.includes(ext) : false;
+}
 
 export async function uploadDocument(file: File) {
   const formData = new FormData();

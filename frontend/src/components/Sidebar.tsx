@@ -15,7 +15,11 @@ import {
   X,
   History,
   MessageCircle,
-  Sparkles
+  Sparkles,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { cn } from '@/lib/utils';
@@ -113,7 +117,7 @@ export const Sidebar = () => {
       )}>
         <div className="flex h-full flex-col p-4">
           {/* Brand */}
-          <div className="mb-8 flex items-center gap-3 px-2">
+          <Link href="/" className="mb-8 flex items-center gap-3 px-2 hover:opacity-80 transition-opacity cursor-pointer">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
               <Sparkles size={18} />
             </div>
@@ -121,7 +125,7 @@ export const Sidebar = () => {
               <span className="text-lg font-bold tracking-tight text-foreground">ChatPDF</span>
               <span className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">Pro Workspace</span>
             </div>
-          </div>
+          </Link>
 
           {/* Primary Actions */}
           <div className="space-y-2 mb-8">
@@ -201,31 +205,89 @@ export const Sidebar = () => {
             {/* Quick Access Documents */}
             <div>
               <div className="mb-3 px-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                <span>Quick Access</span>
-                <Link href="/upload" className="text-[10px] hover:text-primary transition-colors cursor-pointer">View All</Link>
+                <span>Documents</span>
+                <Link href="/upload" className="text-[10px] hover:text-primary transition-colors cursor-pointer">+ Add</Link>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {isLoadingDocuments ? (
-                  Array.from({ length: 2 }).map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-full rounded-md bg-secondary/50 mb-1" />
+                  // Enhanced Loading Skeletons
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-2.5 px-2 py-2 rounded-md">
+                      <Skeleton className="h-7 w-7 rounded-md" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3 w-3/4 rounded" />
+                        <Skeleton className="h-2 w-1/3 rounded" />
+                      </div>
+                    </div>
                   ))
                 ) : documents.length === 0 ? (
-                  <p className="px-2 py-2 text-[11px] text-muted-foreground italic">No docs ready.</p>
+                  // Enhanced Empty State
+                  <Link 
+                    href="/upload"
+                    className="flex flex-col items-center gap-3 py-6 px-4 border border-dashed border-border/60 rounded-xl hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                      <Upload size={18} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-semibold text-foreground/80">No documents yet</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Click to upload your first PDF</p>
+                    </div>
+                  </Link>
                 ) : (
-                  documents.slice(0, 4).map((doc) => (
+                  documents.slice(0, 5).map((doc) => (
                     <div
                       key={doc.id}
-                      className="group flex items-center gap-2.5 rounded-md px-2 py-2 text-xs text-muted-foreground hover:bg-accent/30 transition-colors"
+                      className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-xs text-muted-foreground hover:bg-accent/40 transition-all cursor-default"
                     >
+                      {/* Status-aware Icon */}
                       <div className={cn(
-                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background",
-                        doc.status === 'ready' ? "text-primary/70" : "text-muted-foreground"
+                        "relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        doc.status === 'ready' && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
+                        doc.status === 'processing' && "border-amber-500/30 bg-amber-500/10 text-amber-500",
+                        doc.status === 'failed' && "border-rose-500/30 bg-rose-500/10 text-rose-500"
                       )}>
-                        <FileText size={12} />
+                        {doc.status === 'processing' ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : doc.status === 'failed' ? (
+                          <AlertCircle size={13} />
+                        ) : (
+                          <FileText size={13} />
+                        )}
                       </div>
-                      <div className="flex-1 truncate">
-                        <p className="truncate font-medium text-foreground/80 group-hover:text-foreground">{doc.original_filename}</p>
+                      
+                      {/* Document Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-[11px] font-medium text-foreground/80 group-hover:text-foreground">
+                          {doc.original_filename}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {/* Status Badge */}
+                          <span className={cn(
+                            "inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider",
+                            doc.status === 'ready' && "text-emerald-500",
+                            doc.status === 'processing' && "text-amber-500",
+                            doc.status === 'failed' && "text-rose-500"
+                          )}>
+                            {doc.status === 'ready' && <CheckCircle2 size={8} />}
+                            {doc.status === 'processing' && <Loader2 size={8} className="animate-spin" />}
+                            {doc.status === 'failed' && <AlertCircle size={8} />}
+                            {doc.status}
+                          </span>
+                          {doc.page_count && (
+                            <span className="text-[9px] text-muted-foreground/60">• {doc.page_count} pages</span>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Delete Button */}
+                      <button 
+                        onClick={(e) => handleDeleteDocument(doc.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-all"
+                        title="Delete document"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   ))
                 )}

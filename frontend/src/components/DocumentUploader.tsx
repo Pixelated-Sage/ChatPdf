@@ -6,7 +6,7 @@ import { Upload, X, FileText, CheckCircle2, AlertCircle, Loader2, MessageSquare,
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { uploadDocument } from '@/lib/api';
+import { uploadDocument, SUPPORTED_EXTENSIONS, isFileSupported } from '@/lib/api';
 import { useChatStore } from '@/store/useChatStore';
 import { useToastStore } from '@/store/useToastStore';
 
@@ -30,8 +30,22 @@ export const DocumentUploader = () => {
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/msword': ['.doc'],
+      'text/plain': ['.txt'],
+      'text/markdown': ['.md'],
+      'text/html': ['.html', '.htm'],
     },
     maxSize: 10 * 1024 * 1024, // 10MB
+    validator: (file) => {
+      if (!isFileSupported(file.name)) {
+        return {
+          code: 'file-invalid-type',
+          message: `File type not supported. Supported: ${SUPPORTED_EXTENSIONS.join(', ')}`
+        };
+      }
+      return null;
+    },
   });
 
   const removeFile = (index: number) => {
@@ -106,10 +120,10 @@ export const DocumentUploader = () => {
                 
                 <div className="text-center space-y-3">
                   <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                    {isDragActive ? "Drop files now" : "Upload Research Papers"}
+                    {isDragActive ? "Drop files now" : "Upload Documents"}
                   </h3>
                   <p className="mx-auto text-sm font-medium text-muted-foreground max-w-[300px] leading-relaxed">
-                    Support for PDF documents up to 10MB. 
+                    PDF, DOCX, TXT, MD, HTML up to 10MB. 
                     <br />
                     Drag & drop or click to browse.
                   </p>

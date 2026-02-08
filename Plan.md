@@ -1,953 +1,631 @@
-AI-powered document chat application that lets users upload multiple PDFs and ask questions across them with citations.
-Why Build This:
+**STOP. Let me restructure this for REALITY.**
 
-Portfolio Impact: Showcases full-stack + AI skills (80% of tech job requirements)
-Monetization Potential: Freemium SaaS ($10-20/month premium tier)
-Client Magnet: Demo this to Oxalate leads → "We can build this for your business docs"
-Job Insurance: Every interviewer asks "show me a complex project you built"
-Finite Project: 15-20 hours total (4-5 burst sessions)
+Your doc is 90% perfect but has **one fatal flaw**: Ollama won't run on Railway free tier (needs 2-4GB RAM, Railway gives 512MB).
 
-Business Angle:
+Let me give you the **ACTUAL deployable architecture** + Antigravity-ready product doc.
 
-B2C: Students pay ₹199/month for unlimited PDFs (target: 100 users = ₹20k/month)
-B2B: Companies pay ₹2000/month for team plan (target: 10 companies = ₹20k/month)
-Oxalate Lead Gen: "See this AI tool I built? I can customize it for your business."
+---
 
+# ChatPDF v2 - Product Specification (Antigravity-Ready)
 
-TARGET USERS & USE CASES
-Primary Personas
-1. Rohan (Engineering Student)
+## EXECUTIVE SUMMARY
 
-Problem: Has 15 research papers for project, wastes 2 hours finding specific info
-Use: Uploads all papers, asks "What are the main findings on X?"
-Pays: ₹199/month (cheaper than buying GPT-4 subscription)
+**What:** RAG-based PDF chat app (upload PDFs, ask questions, get cited answers)  
+**Why:** Portfolio showcase + potential ₹20k/month SaaS  
+**How:** Next.js + FastAPI + sentence-transformers + Gemini Pro API  
+**Timeline:** 15-20 hours (4 burst sessions)  
+**Cost:** ₹0/month (all free tiers)
 
-2. Priya (Research Scholar)
+---
 
-Problem: Literature review across 50+ papers, needs citations for thesis
-Use: Organizes papers by topic, asks questions, exports answers with sources
-Pays: ₹499/month (PhD budget)
+## ARCHITECTURE (Reality-Checked for Free Tier Deployment)
 
-3. Startup Founder (B2B)
-
-Problem: Team has 100+ product docs, support tickets, legal docs
-Use: Internal knowledge base, all employees can query
-Pays: ₹2000/month (team plan)
-
-Secondary (Future)
-
-Legal professionals (case law research)
-Healthcare (medical research papers)
-Sales teams (product documentation)
-
-
-COMPETITIVE ANALYSIS
-CompetitorPricingLimitationsOur AdvantageChatPDF.comFree: 2 PDFs/day$20/month: UnlimitedSlow, no multi-doc, English onlyFaster (local embeddings), multi-doc queries, Indian pricingHumata.ai$15/month60 pages/file limitNo page limits, better UIAskYourPDF$15/monthGeneric, no customizationCustomizable for B2B clientsGPT-4 File Upload$20/monthOne file at a time, no persistenceMultiple files, organized library
-Our Differentiator: Local embeddings (faster) + Gemini Pro (free API) = Lower costs, faster responses, Indian pricing (₹199 vs $15).
-
-TECHNICAL ARCHITECTURE
-System Overview
-┌─────────────────────────────────────────────────────────────┐
-│                    USER (Browser)                           │
-└────────────────┬────────────────────────────────────────────┘
+```
+┌─────────────────────────────────────────────────────────┐
+│                  USER (Browser)                         │
+└────────────────┬───────────────────────────────────────┘
                  │
                  ▼
-┌─────────────────────────────────────────────────────────────┐
-│               FRONTEND (Vercel)                              │
-│  • Next.js 14 (App Router) + TypeScript                     │
-│  • Tailwind CSS + shadcn/ui                                  │
-│  • Zustand (state management)                                │
-│  • react-dropzone (file upload)                              │
-└────────────────┬────────────────────────────────────────────┘
-                 │ HTTPS (REST + SSE)
+┌─────────────────────────────────────────────────────────┐
+│         FRONTEND (Vercel - Free Tier)                   │
+│  • Next.js 14 + TypeScript                              │
+│  • Tailwind + shadcn/ui                                 │
+│  • Server-Sent Events (SSE) for streaming               │
+└────────────────┬───────────────────────────────────────┘
+                 │ HTTPS
                  ▼
-┌─────────────────────────────────────────────────────────────┐
-│              BACKEND (Railway)                               │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │             FastAPI (Async)                           │  │
-│  │  • POST /upload (multipart/form-data)                │  │
-│  │  • GET /documents (list with metadata)               │  │
-│  │  • DELETE /documents/{id}                            │  │
-│  │  • POST /chat (SSE streaming)                        │  │
-│  │  • GET /conversations                                │  │
-│  └─────────┬────────────────────────┬───────────────────┘  │
-│            │                        │                       │
-│            ▼                        ▼                       │
-│  ┌──────────────────┐    ┌──────────────────┐             │
-│  │  PDF Processing  │    │   RAG Pipeline   │             │
-│  │                  │    │                  │             │
-│  │  • PyPDF2        │    │  • Query embed   │             │
-│  │  • LangChain     │    │  • Vector search │             │
-│  │  • Chunking      │    │  • Rerank        │             │
-│  └──────────────────┘    │  • LLM generate  │             │
-│                          │  • Stream back   │             │
-│                          └──────────────────┘             │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              STORAGE LAYER                            │  │
-│  │                                                       │  │
-│  │  PostgreSQL           ChromaDB         Filesystem    │  │
-│  │  ┌──────────┐        ┌────────┐      ┌─────────┐   │  │
-│  │  │Documents │        │Vectors │      │ PDFs    │   │  │
-│  │  │Metadata  │        │+Chunks │      │ /uploads│   │  │
-│  │  ├──────────┤        └────────┘      └─────────┘   │  │
-│  │  │Chats     │                                       │  │
-│  │  │Messages  │        Gemini Pro API                 │  │
-│  │  └──────────┘        (Text Generation)              │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-Tech Stack Decisions
-Frontend:
+┌─────────────────────────────────────────────────────────┐
+│         BACKEND (Railway - Free Tier)                   │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  FastAPI (Python 3.11)                         │    │
+│  │  • POST /upload (PDF processing)               │    │
+│  │  • GET /documents (list PDFs)                  │    │
+│  │  • POST /chat (streaming answers)              │    │
+│  │  • DELETE /documents/{id}                      │    │
+│  └──────────┬─────────────────┬───────────────────┘    │
+│             │                 │                         │
+│             ▼                 ▼                         │
+│  ┌──────────────────┐  ┌─────────────────┐            │
+│  │ PDF Processing   │  │  RAG Pipeline   │            │
+│  │ • PyPDF2         │  │  • Embed query  │            │
+│  │ • Text extract   │  │  • Vector search│            │
+│  │ • Chunking       │  │  • Generate ans │            │
+│  └──────────────────┘  └─────────────────┘            │
+│                                                         │
+│  ┌────────────────────────────────────────────────┐   │
+│  │           STORAGE (All on Railway)             │   │
+│  │                                                 │   │
+│  │  SQLite                ChromaDB     Filesystem │   │
+│  │  ┌──────────┐        ┌────────┐   ┌────────┐ │   │
+│  │  │Metadata  │        │Vectors │   │ PDFs   │ │   │
+│  │  │Documents │        │Embeddin│   │ /upload│ │   │
+│  │  │Chats     │        │gs      │   │        │ │   │
+│  │  └──────────┘        └────────┘   └────────┘ │   │
+│  └────────────────────────────────────────────────┘   │
+│                                                         │
+│  External API (NOT running on Railway):                │
+│  ┌────────────────────────────────────────────────┐   │
+│  │  Gemini Pro API (Google, Free till April 2026)│   │
+│  │  • Text generation                             │   │
+│  │  • Streaming support                           │   │
+│  │  • 60 requests/minute free tier                │   │
+│  └────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
 
-Next.js 14 (not 13) - App Router, React Server Components
-TypeScript - Type safety (prevents bugs in production)
-Tailwind + shadcn/ui - Fast UI development, professional look
-Zustand - Simple state (documents, chat history)
-Deployment: Vercel (free tier, auto-deploy on push)
+---
 
-Backend:
+## CRITICAL TECH STACK DECISIONS
 
-FastAPI (not Django) - Async, fast, perfect for streaming
-Python 3.11+ - Latest stable
-Pydantic v2 - Validation
-SQLAlchemy 2.0 - Database ORM
-Deployment: Railway (free tier, PostgreSQL included)
+### ✅ What WORKS on Railway Free Tier (512MB RAM)
 
-AI/ML:
+| Component | Solution | Why |
+|-----------|----------|-----|
+| **Embeddings** | `sentence-transformers` (all-MiniLM-L6-v2) | 80MB model, runs on CPU, 384-dim vectors |
+| **Vector Store** | ChromaDB (embedded mode) | No separate server needed, stores in SQLite |
+| **Database** | SQLite | Railway includes it, no setup needed |
+| **LLM** | **Gemini Pro API** | Free till April 2026, streaming, 1M tokens/day limit |
+| **PDF Storage** | Railway filesystem | 1GB persistent storage |
 
-sentence-transformers (all-MiniLM-L6-v2) - Local embeddings, 384 dims, fast
-ChromaDB - Vector storage, embedded mode
-Gemini Pro - Free till April 2026, streaming support
-LangChain - Text chunking (RecursiveCharacterTextSplitter)
+### ❌ What DOESN'T WORK on Railway Free Tier
 
-Database:
+| Component | Why It Fails | Alternative |
+|-----------|--------------|-------------|
+| **Ollama** | Needs 2-4GB RAM minimum | Use Gemini Pro API instead |
+| **PostgreSQL** | Railway charges for DB | Use SQLite (included free) |
+| **Large Models** | 7B models need 4-8GB RAM | Stick to sentence-transformers |
 
-PostgreSQL - Metadata (Railway managed, free tier)
-ChromaDB - Vector embeddings (runs in backend process)
-Filesystem - PDF storage (Railway persistent disk)
+### 🔄 Fallback Strategy (If Gemini API Expires)
 
-Why These Choices:
+```python
+# Primary: Gemini Pro (free till April 2026)
+if GEMINI_API_KEY:
+    llm = GeminiPro()
 
-Free Tier Everything - Vercel + Railway + Gemini = ₹0 hosting
-Fast Development - Familiar stack, lots of examples
-Scalable - Can handle 100-1000 users without changes
-Portfolio Ready - Modern stack employers look for
+# Fallback 1: OpenAI (pay $0.002 per 1K tokens)
+elif OPENAI_API_KEY:
+    llm = OpenAI(model="gpt-3.5-turbo")
 
+# Fallback 2: Groq (free, fast, 6K tokens/min)
+elif GROQ_API_KEY:
+    llm = Groq(model="llama3-8b")
+```
 
-DATABASE SCHEMA
-PostgreSQL Tables
-sql-- Users (Phase 2 - auth)
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    plan VARCHAR(20) DEFAULT 'free', -- free, premium, enterprise
-    created_at TIMESTAMP DEFAULT NOW()
-);
+---
 
--- Documents
+## DATABASE SCHEMA (SQLite - Simplified)
+
+```sql
+-- documents table
 CREATE TABLE documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    filename VARCHAR(255) NOT NULL,
-    original_filename VARCHAR(255) NOT NULL,
-    file_path VARCHAR(500) NOT NULL,
-    file_size INTEGER NOT NULL,      -- bytes
-    page_count INTEGER NOT NULL,
-    chunk_count INTEGER NOT NULL,    -- for tracking
-    upload_date TIMESTAMP DEFAULT NOW(),
-    processed BOOLEAN DEFAULT FALSE,
-    processing_error TEXT NULL
+    id TEXT PRIMARY KEY,              -- UUID
+    filename TEXT NOT NULL,
+    file_path TEXT NOT NULL,          -- /uploads/{id}.pdf
+    file_size INTEGER,                -- bytes
+    page_count INTEGER,
+    chunk_count INTEGER,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT DEFAULT 'processing'  -- processing, ready, failed
 );
 
--- Conversations
+-- conversations table
 CREATE TABLE conversations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255),              -- auto-generated from first question
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    title TEXT,                       -- Auto-generated from first question
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Messages
+-- messages table
 CREATE TABLE messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
-    content TEXT NOT NULL,
-    citations JSONB NULL,            -- [{doc_id, filename, page, chunk_text}, ...]
-    created_at TIMESTAMP DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT REFERENCES conversations(id),
+    role TEXT CHECK(role IN ('user', 'assistant')),
+    content TEXT,
+    citations TEXT,                   -- JSON string
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Conversation-Document mapping (many-to-many)
+-- conversation_documents (many-to-many)
 CREATE TABLE conversation_documents (
-    conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
-    document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
-    added_at TIMESTAMP DEFAULT NOW(),
+    conversation_id TEXT REFERENCES conversations(id),
+    document_id TEXT REFERENCES documents(id),
     PRIMARY KEY (conversation_id, document_id)
 );
+```
 
--- Indexes for performance
-CREATE INDEX idx_messages_conversation ON messages(conversation_id);
-CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
-CREATE INDEX idx_documents_user ON documents(user_id);
-CREATE INDEX idx_conversations_user ON conversations(user_id);
-ChromaDB Collection Structure
-python{
-    "collection_name": "document_chunks",
-    "metadata": {"description": "All document embeddings"},
-    
+**ChromaDB Collection:**
+```python
+{
+    "collection_name": "pdf_chunks",
     "documents": {
-        "ids": ["doc_uuid_chunk_0", "doc_uuid_chunk_1", ...],
-        "embeddings": [[0.123, -0.456, ...], ...],  # 384-dim vectors
+        "ids": ["doc1_chunk_0", "doc1_chunk_1", ...],
+        "embeddings": [[0.123, -0.456, ...], ...],  # 384-dim
         "metadatas": [
             {
-                "document_id": "uuid",
-                "user_id": "uuid",           # For multi-user filtering
+                "document_id": "doc1",
                 "filename": "research.pdf",
                 "page": 5,
-                "chunk_index": 0,
-                "chunk_length": 487,
-                "chunk_text": "First 100 chars preview..."
-            },
-            ...
+                "chunk_index": 0
+            }
         ],
-        "documents": ["Full chunk text here...", ...]
+        "documents": ["Full chunk text..."]
     }
 }
 ```
 
 ---
 
-## API SPECIFICATION
+## API ENDPOINTS
 
-### Base URL
-- **Development:** `http://localhost:8000`
-- **Production:** `https://chatpdf-api.railway.app`
-
-### Authentication (Phase 2)
-```
-Authorization: Bearer <jwt_token>
-Endpoints
-1. Upload Document
-httpPOST /api/upload
+### 1. Upload PDF
+```http
+POST /api/upload
 Content-Type: multipart/form-data
-Authorization: Bearer <token>
 
-Body:
-{
-  "file": <PDF binary>
-}
+Body: { "file": <PDF binary> }
 
-Response 202 Accepted:
+Response 200:
 {
   "document_id": "uuid",
   "filename": "research.pdf",
-  "status": "processing",
-  "message": "Document queued for processing"
+  "status": "processing"
 }
+```
 
-Response 400 Bad Request:
-{
-  "detail": "File size exceeds 10MB limit"
-}
+### 2. List Documents
+```http
+GET /api/documents
 
-Response 422 Unprocessable Entity:
-{
-  "detail": "File must be a PDF"
-}
-Processing Flow:
-
-Validate file (type, size)
-Save to /uploads/{user_id}/{uuid}.pdf
-Queue background task (extract text, chunk, embed, store)
-Return 202 immediately
-Frontend polls /api/documents/{id} for status
-
-
-2. Get Upload Status
-httpGET /api/documents/{document_id}
-Authorization: Bearer <token>
-
-Response 200 OK:
-{
-  "id": "uuid",
-  "filename": "research.pdf",
-  "status": "processing",  // or "ready", "failed"
-  "progress": 65,           // 0-100
-  "page_count": 15,
-  "chunk_count": 45,
-  "error": null
-}
-
-3. List Documents
-httpGET /api/documents
-Authorization: Bearer <token>
-Query Params:
-  - sort_by: name | date | size (default: date)
-  - order: asc | desc (default: desc)
-
-Response 200 OK:
+Response 200:
 {
   "documents": [
     {
       "id": "uuid",
       "filename": "research.pdf",
-      "file_size": 2048000,    // bytes
       "page_count": 15,
       "chunk_count": 45,
-      "upload_date": "2026-01-28T14:30:00Z",
+      "uploaded_at": "2026-02-08T10:30:00Z",
       "status": "ready"
-    },
-    ...
-  ],
-  "total": 5
-}
-
-4. Delete Document
-httpDELETE /api/documents/{document_id}
-Authorization: Bearer <token>
-
-Response 200 OK:
-{
-  "message": "Document deleted successfully",
-  "document_id": "uuid"
-}
-Cleanup:
-
-Delete from PostgreSQL (cascades to messages)
-Delete vectors from ChromaDB
-Delete PDF file from filesystem
-
-
-5. Chat (Ask Question)
-httpPOST /api/chat
-Content-Type: application/json
-Authorization: Bearer <token>
-
-Body:
-{
-  "question": "What are the main findings about quantum computing?",
-  "conversation_id": "uuid",        // optional, creates new if null
-  "document_ids": ["uuid1", "uuid2"]  // optional, uses all if null
-}
-
-Response 200 OK (Server-Sent Events):
-Content-Type: text/event-stream
-
-data: {"type": "start", "conversation_id": "uuid"}
-
-data: {"type": "chunk", "content": "The main findings"}
-
-data: {"type": "chunk", "content": " about quantum"}
-
-data: {"type": "chunk", "content": " computing are..."}
-
-data: {"type": "citation", "data": {"document_id": "uuid", "filename": "research.pdf", "page": 5, "chunk_text": "Our experiments show..."}}
-
-data: {"type": "done", "message_id": "uuid"}
-RAG Pipeline:
-
-Embed question (sentence-transformers)
-Query ChromaDB (top 5 similar chunks, filter by user_id + doc_ids)
-Rerank chunks (optional, using cross-encoder)
-Build context prompt for Gemini
-Stream response from Gemini
-Parse citations from response
-Save conversation to PostgreSQL
-
-
-6. Get Conversation
-httpGET /api/conversations/{conversation_id}
-Authorization: Bearer <token>
-
-Response 200 OK:
-{
-  "id": "uuid",
-  "title": "Quantum Computing Research",
-  "created_at": "2026-01-28T14:00:00Z",
-  "updated_at": "2026-01-28T14:35:00Z",
-  "messages": [
-    {
-      "role": "user",
-      "content": "What are the main findings?",
-      "created_at": "2026-01-28T14:30:00Z"
-    },
-    {
-      "role": "assistant",
-      "content": "The main findings are...",
-      "citations": [
-        {
-          "document_id": "uuid",
-          "filename": "research.pdf",
-          "page": 5,
-          "chunk_text": "Our results show..."
-        }
-      ],
-      "created_at": "2026-01-28T14:30:05Z"
-    }
-  ],
-  "documents": [
-    {
-      "id": "uuid",
-      "filename": "research.pdf",
-      "page_count": 15
     }
   ]
 }
+```
 
-7. List Conversations
-httpGET /api/conversations
-Authorization: Bearer <token>
+### 3. Chat (Streaming)
+```http
+POST /api/chat
+Content-Type: application/json
 
-Response 200 OK:
+Body:
 {
-  "conversations": [
-    {
-      "id": "uuid",
-      "title": "Quantum Computing Research",
-      "message_count": 8,
-      "document_count": 3,
-      "updated_at": "2026-01-28T14:35:00Z"
-    },
-    ...
-  ],
-  "total": 12
+  "question": "What are the main findings?",
+  "document_ids": ["uuid1", "uuid2"]  # optional
 }
-```
 
----
-
-## PROJECT PHASES (Burst Sprints)
-
-### Phase 1: Backend Foundation (4-5 hours)
-
-**Goal:** Working API that can upload PDFs and extract text
-
-**Tasks:**
-- [x] Project setup (FastAPI structure)
-- [x] PDF upload endpoint
-- [x] Text extraction (PyPDF2)
-- [x] Database models (SQLAlchemy)
-- [x] Basic error handling
-- [x] Test with Postman/curl
-
-**Deliverables:**
-- FastAPI app running on `localhost:8000`
-- `/upload` endpoint accepts PDF
-- Extracted text stored
-- `/docs` shows API documentation
-
-**Agent Assignment:**
-```
-@backend: Create FastAPI project structure with:
-- app/main.py (FastAPI app, CORS)
-- app/models.py (SQLAlchemy models)
-- app/schemas.py (Pydantic models)
-- app/routes/upload.py (upload endpoint)
-- app/services/pdf_processor.py (text extraction)
-
-Use Abhishek's Arch environment (venv at /data/venvs/chatpdf-backend)
-Success Criteria:
-bash# Upload PDF
-curl -X POST http://localhost:8000/upload \
-  -F "file=@sample.pdf"
-
-# Response
-{"document_id": "uuid", "status": "processing"}
-```
-
----
-
-### Phase 2: RAG Pipeline (5-6 hours)
-
-**Goal:** Question answering with citations working
-
-**Tasks:**
-- [ ] Text chunking (LangChain)
-- [ ] Embedding generation (sentence-transformers)
-- [ ] ChromaDB integration
-- [ ] Gemini Pro API setup
-- [ ] Chat endpoint (streaming)
-- [ ] Citation parsing
-
-**Deliverables:**
-- Upload PDF → Auto-chunks → Embeds → Stores in ChromaDB
-- Ask question → Returns streaming answer with citations
-
-**Agent Assignment:**
-```
-@ml: Implement RAG pipeline:
-1. Text chunking in app/services/pdf_processor.py
-   - LangChain RecursiveCharacterTextSplitter
-   - 500 token chunks, 50 token overlap
-   
-2. Embedding generation in app/services/embeddings.py
-   - sentence-transformers 'all-MiniLM-L6-v2'
-   - Batch processing for speed
-   - Cache model in /data/models/embeddings/
-   
-3. ChromaDB integration in app/services/vector_store.py
-   - Store embeddings with metadata
-   - Query by similarity
-
-@backend: Implement chat endpoint:
-- app/routes/chat.py
-- Streaming with Server-Sent Events
-- Integrate with RAG pipeline
-- Parse citations from Gemini response
-Success Criteria:
-bash# Chat
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is the main topic?", "document_ids": ["uuid"]}'
-
-# Response (SSE)
-data: {"type": "chunk", "content": "The main topic..."}
-data: {"type": "citation", "data": {"page": 3, "filename": "research.pdf"}}
+Response (Server-Sent Events):
+data: {"type": "chunk", "content": "The main findings"}
+data: {"type": "chunk", "content": " are..."}
+data: {"type": "citation", "data": {"filename": "research.pdf", "page": 5}}
 data: {"type": "done"}
 ```
 
+### 4. Delete Document
+```http
+DELETE /api/documents/{id}
+
+Response 200:
+{
+  "message": "Document deleted"
+}
+```
+
 ---
 
-### Phase 3: Frontend (5-6 hours)
+## 4-PHASE BUILD PLAN (Antigravity Execution)
 
-**Goal:** Beautiful UI for uploading and chatting
+### **Phase 1: Backend Foundation** (5 hours)
 
-**Tasks:**
-- [ ] Next.js project setup
-- [ ] File upload component (drag-drop)
-- [ ] Document list sidebar
-- [ ] Chat interface (streaming text)
-- [ ] Citation popovers
-- [ ] Responsive design
+**Agent:** `@backend` + `@devops`
 
 **Deliverables:**
-- Clean, ChatGPT-like interface
-- Works on mobile
-- Real-time streaming responses
-- Citations clickable
+- FastAPI app structure
+- PDF upload endpoint
+- Text extraction (PyPDF2)
+- SQLite database setup
+- File storage on Railway
 
-**Agent Assignment:**
+**Code Structure:**
 ```
-@frontend: Build Next.js app:
-
-1. Upload page (app/upload/page.tsx)
-   - react-dropzone for drag-drop
-   - Progress indicator
-   - File validation
-
-2. Chat page (app/chat/page.tsx)
-   - Message list (user + AI)
-   - Streaming text display
-   - Input box with character counter
-
-3. Components:
-   - components/DocumentSidebar.tsx
-   - components/ChatMessage.tsx
-   - components/CitationPopover.tsx
-
-Stack detected: Next.js 14 + Tailwind + shadcn/ui
-Mobile-first, dark mode support
+chatpdf-backend/
+├── app/
+│   ├── main.py              # FastAPI app + CORS
+│   ├── database.py          # SQLite connection
+│   ├── models.py            # SQLAlchemy models
+│   ├── schemas.py           # Pydantic request/response
+│   ├── routes/
+│   │   ├── upload.py        # POST /upload
+│   │   ├── documents.py     # GET /documents, DELETE /documents/{id}
+│   │   └── chat.py          # POST /chat (placeholder)
+│   └── services/
+│       └── pdf_processor.py # PyPDF2 text extraction
+├── uploads/                 # PDF storage
+├── chroma_db/              # ChromaDB persistence
+├── requirements.txt
+└── .env.example
 ```
 
 **Success Criteria:**
-- Upload PDF via drag-drop
-- See processing progress
-- Ask question, see streaming response
-- Click citation, see source snippet
+```bash
+# Upload PDF
+curl -X POST http://localhost:8000/api/upload \
+  -F "file=@test.pdf"
 
----
+# Response
+{"document_id": "abc123", "filename": "test.pdf", "status": "processing"}
 
-### Phase 4: Polish & Deploy (2-3 hours)
+# List documents
+curl http://localhost:8000/api/documents
 
-**Goal:** Production-ready app
-
-**Tasks:**
-- [ ] Error handling (all edge cases)
-- [ ] Loading states (skeletons)
-- [ ] Empty states (no documents yet)
-- [ ] Toast notifications
-- [ ] README documentation
-- [ ] Deploy to Vercel + Railway
-
-**Agent Assignment:**
+# Response
+{"documents": [{"id": "abc123", "filename": "test.pdf", "status": "ready"}]}
 ```
-@qa: Security audit:
-- Check for hardcoded secrets
-- Test file upload limits
-- SQL injection tests
-- CORS configuration
 
-@devops: Deploy:
-- Backend to Railway
-- Frontend to Vercel
-- Set environment variables
-- Test production deployment
+**Antigravity Command:**
+```
+@backend create FastAPI project:
+- Project name: chatpdf-backend
+- Python 3.11
+- Use /data/venvs/chatpdf-backend for venv
+- Code in ~/Documents/C02/chatpdf-backend
+- Install: fastapi, uvicorn, sqlalchemy, pypdf2, python-multipart
+- Setup SQLite database in app/database.py
+- Create upload endpoint with file validation (PDF only, max 10MB)
+- Store PDFs in /uploads/{uuid}.pdf
+- Extract text and save metadata to documents table
 
-@frontend: Polish UI:
-- Loading skeletons
-- Error boundaries
-- Toast notifications
-- Empty states
-Success Criteria:
-
-App live at chatpdf.vercel.app
-API at chatpdf-api.railway.app
-No errors in production
-Beautiful UX
-
-
-CRITICAL IMPLEMENTATION DETAILS
-1. Smart Chunking Strategy
-Problem: Naive chunking (every 500 chars) breaks sentences, loses context.
-Solution:
-pythonfrom langchain.text_splitters import RecursiveCharacterTextSplitter
-
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,           # ~400 words
-    chunk_overlap=50,         # Preserve context across chunks
-    separators=[
-        "\n\n",              # Paragraph breaks first
-        "\n",                # Line breaks second
-        ". ",                # Sentences third
-        " ",                 # Words last resort
-        ""
-    ],
-    length_function=len
-)
-
-chunks = splitter.split_text(extracted_text)
-Metadata to Store:
-python{
-    "document_id": "uuid",
-    "page": 5,               # Which page this came from
-    "chunk_index": 2,        # Order in document
-    "chunk_text": "...",     # Full text
-    "preview": "First 100 chars..."  # For citation display
-}
-
-2. Embedding Generation (Optimized)
-Model: sentence-transformers/all-MiniLM-L6-v2
-
-Size: 80MB (small enough for Railway)
-Dims: 384 (fast similarity search)
-Speed: ~1000 chunks/second on CPU
-
-Code:
-pythonfrom sentence_transformers import SentenceTransformer
-from pathlib import Path
-
-# CRITICAL: Load model once, reuse
-MODEL_PATH = Path("/data/models/embeddings/all-MiniLM-L6-v2")
-
-if not MODEL_PATH.exists():
-    # First time: Download to /data
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    model.save(str(MODEL_PATH))
-else:
-    # Load from /data (respects partition structure)
-    model = SentenceTransformer(str(MODEL_PATH))
-
-def embed_chunks(chunks: List[str]) -> List[List[float]]:
-    """Batch embed for speed"""
-    embeddings = model.encode(
-        chunks,
-        batch_size=32,       # Balance speed vs memory
-        show_progress_bar=True
-    )
-    return embeddings.tolist()
-
-3. ChromaDB Setup
-Storage: Persistent mode (survives restarts)
-pythonimport chromadb
-from chromadb.config import Settings
-
-# For development (local)
-client = chromadb.Client(Settings(
-    chroma_db_impl="duckdb+parquet",
-    persist_directory="/data/chroma_db"  # Abhishek's /data partition
-))
-
-# For production (Railway)
-client = chromadb.Client(Settings(
-    chroma_db_impl="duckdb+parquet",
-    persist_directory="/app/chroma_db"   # Railway persistent disk
-))
-
-collection = client.get_or_create_collection(
-    name="document_chunks",
-    metadata={"hnsw:space": "cosine"}  # Cosine similarity
-)
-
-# Add embeddings
-collection.add(
-    ids=["doc_uuid_chunk_0", "doc_uuid_chunk_1", ...],
-    embeddings=[[0.1, 0.2, ...], ...],
-    metadatas=[{"document_id": "...", "page": 5}, ...],
-    documents=["chunk text...", ...]
-)
-
-# Query
-results = collection.query(
-    query_embeddings=[[0.1, 0.2, ...]],  # User question embedding
-    n_results=5,
-    where={"document_id": {"$in": ["uuid1", "uuid2"]}}  # Filter by docs
-)
-
-4. Gemini Pro Integration (Streaming)
-Setup:
-pythonimport google.generativeai as genai
-import os
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-pro')
-
-def generate_answer(question: str, context_chunks: List[dict]):
-    # Build context
-    context = "\n\n".join([
-        f"[Source: {c['filename']}, Page {c['page']}]\n{c['text']}"
-        for c in context_chunks
-    ])
-    
-    prompt = f"""You are a helpful research assistant. Answer the question based ONLY on the provided context. If the answer is not in the context, say "I don't have enough information to answer that."
-
-Context:
-{context}
-
-Question: {question}
-
-Instructions:
-- Be concise but complete
-- Cite sources using [Filename, Page X] format
-- If multiple sources support a point, cite all
-
-Answer:"""
-    
-    # Stream response
-    response = model.generate_content(prompt, stream=True)
-    
-    for chunk in response:
-        if chunk.text:
-            yield chunk.text
-Streaming Endpoint (FastAPI):
-pythonfrom fastapi.responses import StreamingResponse
-
-@app.post("/chat")
-async def chat(request: ChatRequest):
-    async def event_stream():
-        # Embed question
-        question_embedding = embed_text(request.question)
-        
-        # Query ChromaDB
-        results = query_vector_store(question_embedding, request.document_ids)
-        
-        # Stream from Gemini
-        for chunk in generate_answer(request.question, results):
-            yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-        
-        yield f"data: {json.dumps({'type': 'done'})}\n\n"
-    
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream"
-    )
+@devops create Railway deployment config:
+- Create Procfile: web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+- Create railway.toml with persistent storage
+- Set environment variables template
 ```
 
 ---
 
-### 5. Citation Parsing
+### **Phase 2: RAG Pipeline** (6 hours)
 
-**Gemini Response:**
+**Agent:** `@ml` + `@backend`
+
+**Deliverables:**
+- Text chunking (LangChain)
+- Embedding generation (sentence-transformers)
+- ChromaDB integration
+- Gemini Pro API integration
+- Streaming chat endpoint
+
+**New Files:**
 ```
-The main findings are X and Y [research.pdf, Page 3]. Additionally, Z was observed [textbook.pdf, Page 12].
-Parse Citations:
-pythonimport re
+app/services/
+├── embeddings.py        # sentence-transformers wrapper
+├── vector_store.py      # ChromaDB operations
+├── chunking.py          # LangChain text splitter
+└── llm.py               # Gemini Pro API client
+```
 
-def parse_citations(text: str, chunks: List[dict]) -> List[dict]:
-    """Extract [Filename, Page X] citations"""
-    pattern = r'\[([^,]+),\s*Page\s*(\d+)\]'
-    citations = []
-    
-    for match in re.finditer(pattern, text):
-        filename = match.group(1).strip()
-        page = int(match.group(2))
-        
-        # Find matching chunk
-        for chunk in chunks:
-            if chunk['filename'] == filename and chunk['page'] == page:
-                citations.append({
-                    'document_id': chunk['document_id'],
-                    'filename': filename,
-                    'page': page,
-                    'chunk_text': chunk['text'][:200]  # Preview
-                })
-                break
-    
-    return citations
+**RAG Flow:**
+```python
+# 1. User uploads PDF
+→ Extract text (PyPDF2)
+→ Split into chunks (LangChain, 500 chars, 50 overlap)
+→ Generate embeddings (sentence-transformers)
+→ Store in ChromaDB with metadata
 
-6. Frontend Streaming Display
-React Component:
-tsx'use client';
+# 2. User asks question
+→ Embed question (same model)
+→ Query ChromaDB (top 5 similar chunks)
+→ Build context prompt
+→ Stream answer from Gemini Pro
+→ Parse citations
+→ Save to messages table
+```
 
-import { useState } from 'react';
+**Success Criteria:**
+```bash
+# Upload PDF (auto-processes)
+curl -X POST http://localhost:8000/api/upload -F "file=@research.pdf"
+# Wait 10-30 seconds for processing
 
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [streaming, setStreaming] = useState(false);
+# Ask question
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is the main topic?"}'
 
-  const sendMessage = async (question: string) => {
-    // Add user message
-    setMessages(prev => [...prev, { role: 'user', content: question }]);
-    
-    // Start streaming
-    setStreaming(true);
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question })
-    });
-    
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-    
-    let aiMessage = { role: 'assistant', content: '', citations: [] };
-    setMessages(prev => [...prev, aiMessage]);
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n\n');
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = JSON.parse(line.slice(6));
-          
-          if (data.type === 'chunk') {
-            // Append text to AI message
-            setMessages(prev => {
-              const updated = [...prev];
-              updated[updated.length - 1].content += data.content;
-              return updated;
-            });
-          } else if (data.type === 'citation') {
-            // Add citation
-            setMessages(prev => {
-              const updated = [...prev];
-              updated[updated.length - 1].citations.push(data.data);
-              return updated;
-            });
-          }
-        }
-      }
-    }
-    
-    setStreaming(false);
-  };
-  
-  return (
-    <div className="flex flex-col h-screen">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.map((msg, i) => (
-          <ChatMessage key={i} message={msg} />
-        ))}
-      </div>
-      
-      {/* Input */}
-      <ChatInput onSend={sendMessage} disabled={streaming} />
-    </div>
-  );
-}
+# Response (streaming)
+data: {"type": "chunk", "content": "The main topic is..."}
+data: {"type": "citation", "data": {"filename": "research.pdf", "page": 3}}
+data: {"type": "done"}
+```
 
-MONETIZATION STRATEGY
-Pricing Tiers
-TierPrice (INR)Price (USD)FeaturesTargetFree₹0$02 PDFs/day, 10 questions/dayTrial usersStudent₹199/month$2.49/month50 PDFs, unlimited questionsStudentsProfessional₹499/month$6/monthUnlimited PDFs, priority supportResearchersTeam₹2000/month$25/month10 users, shared workspaceStartups
-Revenue Projections
-Conservative (3 months):
+**Antigravity Command:**
+```
+@ml implement RAG pipeline:
 
-50 Student users × ₹199 = ₹9,950/month
-5 Professional users × ₹499 = ₹2,495/month
-Total: ₹12,445/month
+1. Install: sentence-transformers, chromadb, langchain, google-generativeai
 
-Target (6 months):
+2. Create app/services/embeddings.py:
+   - Load 'all-MiniLM-L6-v2' model
+   - Cache model in /data/models/embeddings/
+   - Function: embed_text(text: str) -> List[float]
+   - Function: embed_batch(texts: List[str]) -> List[List[float]]
 
-100 Student users × ₹199 = ₹19,900/month
-10 Professional users × ₹499 = ₹4,990/month
-2 Team plans × ₹2000 = ₹4,000/month
-Total: ₹28,890/month
+3. Create app/services/chunking.py:
+   - Use RecursiveCharacterTextSplitter
+   - chunk_size=500, chunk_overlap=50
+   - Preserve paragraph/sentence boundaries
 
-Optimistic (12 months):
+4. Create app/services/vector_store.py:
+   - ChromaDB client with persist_directory="./chroma_db"
+   - add_document(doc_id, chunks, embeddings, metadatas)
+   - query(question_embedding, document_ids, top_k=5)
+   - delete_document(doc_id)
 
-200 Student users = ₹39,800
-20 Professional users = ₹9,980
-5 Team plans = ₹10,000
-Total: ₹59,780/month
+5. Create app/services/llm.py:
+   - Gemini Pro client (use GEMINI_API_KEY env var)
+   - generate_answer(question, context_chunks, stream=True)
+   - Return generator that yields text chunks
 
-Marketing Channels
+@backend update routes/upload.py:
+- After PDF upload, trigger background task:
+  1. Extract text
+  2. Chunk text
+  3. Generate embeddings
+  4. Store in ChromaDB
+  5. Update document status to "ready"
 
-Reddit - r/Indian_Academia, r/IndianStudents
+@backend implement routes/chat.py:
+- POST /chat endpoint
+- Streaming response with Server-Sent Events
+- Flow:
+  1. Embed user question
+  2. Query ChromaDB
+  3. Build prompt with context
+  4. Stream from Gemini Pro
+  5. Parse citations
+  6. Save conversation
+```
 
-Post: "Built a ChatGPT for PDFs with Indian pricing"
-Cost: Free
+---
 
+### **Phase 3: Frontend** (5 hours)
 
-Twitter/X - Tech community
+**Agent:** `@frontend`
 
-Demo video
-Tag: #IndieHackers, #BuildInPublic
+**Deliverables:**
+- Next.js 14 app with App Router
+- File upload with drag-drop
+- Document list sidebar
+- Streaming chat interface
+- Citation display
 
+**Page Structure:**
+```
+chatpdf-frontend/
+├── app/
+│   ├── layout.tsx           # Root layout, dark mode
+│   ├── page.tsx             # Home (redirect to /chat)
+│   ├── upload/
+│   │   └── page.tsx         # Upload page
+│   └── chat/
+│       └── page.tsx         # Chat interface
+├── components/
+│   ├── FileUpload.tsx       # Drag-drop upload
+│   ├── DocumentSidebar.tsx  # List of PDFs
+│   ├── ChatMessage.tsx      # Single message bubble
+│   ├── ChatInput.tsx        # Question input box
+│   └── CitationBadge.tsx    # Clickable citation
+└── lib/
+    ├── api.ts               # Backend API client
+    └── types.ts             # TypeScript types
+```
 
-College WhatsApp Groups
+**UI Components (shadcn/ui):**
+- Button, Card, Input, Textarea
+- Badge (for citations)
+- Dialog (for citation preview)
+- Toast (for notifications)
+- Skeleton (loading states)
 
-Vaibhav's network
-Offer: First 50 users → ₹99/month lifetime
+**Success Criteria:**
+- Drag-drop PDF → see upload progress
+- Click uploaded PDF → opens chat
+- Type question → see streaming answer
+- Click citation → see source text popup
 
+**Antigravity Command:**
+```
+@frontend create Next.js app:
 
-Oxalate Portfolio
+1. Setup:
+   - Next.js 14 with App Router
+   - TypeScript strict mode
+   - Tailwind CSS + shadcn/ui
+   - Code in ~/Documents/C02/chatpdf-frontend
+   - API base URL: http://localhost:8000 (dev), env var for prod
 
-"See this AI tool? We build custom versions for businesses"
-B2B lead generator
+2. Create app/upload/page.tsx:
+   - react-dropzone for drag-drop
+   - File validation (PDF only, max 10MB)
+   - Upload progress bar
+   - Success: redirect to /chat
+   - Error: toast notification
 
+3. Create app/chat/page.tsx:
+   - Layout: DocumentSidebar (left) + Chat (right)
+   - Mobile: tabs to switch between sidebar and chat
+   - Fetch documents on mount
+   - Click document → load conversation or start new
 
-SEO - Target keywords
+4. Create components/ChatMessage.tsx:
+   - User messages: right-aligned, blue background
+   - AI messages: left-aligned, gray background
+   - Citations: inline badges [research.pdf, p.5]
+   - Click citation → dialog with full chunk text
 
-"ChatPDF alternative India"
-"PDF chat AI free"
-"Ask questions to PDF"
+5. Create components/ChatInput.tsx:
+   - Textarea with auto-expand
+   - Send button (disabled while streaming)
+   - Character counter (max 500 chars)
 
+6. Implement streaming:
+   - Use EventSource for Server-Sent Events
+   - Append chunks to AI message in real-time
+   - Handle citations and done events
 
+7. Polish:
+   - Dark mode support
+   - Loading skeletons
+   - Empty states ("No documents yet")
+   - Error boundaries
+```
 
+---
 
-SUCCESS METRICS
-Technical Metrics
+### **Phase 4: Deploy & Polish** (3 hours)
 
- Upload processing: <30 seconds per 10MB PDF
- Query response time: First chunk in <2 seconds
- Citation accuracy: >90% (manual spot-check)
- Uptime: >95%
- Error rate: <1% of requests
+**Agent:** `@devops` + `@qa` + `@frontend`
 
-Business Metrics
+**Deliverables:**
+- Backend deployed to Railway
+- Frontend deployed to Vercel
+- Environment variables configured
+- Error handling tested
+- README documentation
 
- Week 1: App deployed and live
- Week 2: First 10 sign-ups
- Week 4: First paying customer
- Week 8: ₹5,000/month MRR
- Week 12: ₹20,000/month MRR
+**Deployment Checklist:**
+- [ ] Backend: Railway deployment successful
+- [ ] Frontend: Vercel deployment successful
+- [ ] CORS configured (allow frontend domain)
+- [ ] Environment variables set (GEMINI_API_KEY)
+- [ ] Persistent storage enabled on Railway
+- [ ] Custom domain configured (chatpdf.abhishek.oxalate.com)
+- [ ] SSL certificates active
+- [ ] Uptime monitoring enabled
 
-Portfolio Metrics
+**Success Criteria:**
+```bash
+# Production URLs work
+curl https://chatpdf-api.railway.app/api/documents
+curl https://chatpdf.vercel.app
 
- GitHub stars: 50+ (shows interest)
- Demo video views: 500+
- Resume clicks: Use in job applications
- Oxalate leads: Show in 5+ sales calls
+# Upload + chat flow works end-to-end
+# No console errors
+# Mobile responsive
+# Streams properly
+```
 
+**Antigravity Command:**
+```
+@devops deploy backend to Railway:
+1. Create new Railway project
+2. Connect GitHub repo (chatpdf-backend)
+3. Set environment variables:
+   - GEMINI_API_KEY=...
+   - DATABASE_URL=sqlite:///./app.db
+4. Configure persistent storage for /uploads and /chroma_db
+5. Deploy and test /health endpoint
 
-RISK MITIGATION
-Technical Risks
-RiskImpactMitigationGemini API failsHIGHFallback to OpenAI API (pay per use)Railway free tier limitsMEDIUMOptimize queries, add cachingChromaDB too slowMEDIUMUse Pinecone (managed, faster)PDF extraction failsLOWRobust error handling, retry logic
-Business Risks
-RiskImpactMitigationNo users sign upHIGHFree tier + aggressive marketingUsers don't upgradeMEDIUMFeature gates (5 PDFs free, then paywall)Competition launchesLOWMove fast, differentiate on Indian pricingGemini API becomes paidMEDIUMAlready profitable by then, can pay
+@devops deploy frontend to Vercel:
+1. Create new Vercel project
+2. Connect GitHub repo (chatpdf-frontend)
+3. Set environment variables:
+   - NEXT_PUBLIC_API_URL=https://chatpdf-api.railway.app
+4. Deploy and test
+
+@frontend add final polish:
+- Toast notifications for errors
+- Loading skeletons everywhere
+- Empty states with helpful text
+- 404 page
+- Add meta tags for SEO
+
+@qa security audit:
+- Check for hardcoded secrets (NONE allowed)
+- Test file upload limits (should reject >10MB)
+- Test malicious file uploads (non-PDF should fail)
+- Test CORS (only frontend domain allowed)
+- Test rate limiting (if needed)
+
+@backend create comprehensive README:
+- Architecture diagram
+- Setup instructions (local + deployment)
+- API documentation
+- Environment variables reference
+- Troubleshooting guide
+```
+
+---
+
+## ENVIRONMENT VARIABLES
+
+### Backend (.env)
+```bash
+# Required
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional (defaults work)
+DATABASE_URL=sqlite:///./app.db
+UPLOAD_DIR=./uploads
+CHROMA_DIR=./chroma_db
+MAX_FILE_SIZE=10485760  # 10MB in bytes
+ALLOWED_ORIGINS=http://localhost:3000,https://chatpdf.vercel.app
+```
+
+### Frontend (.env.local)
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000        # dev
+NEXT_PUBLIC_API_URL=https://chatpdf-api.railway.app  # prod
+```
+
+---
+
+## SUCCESS METRICS
+
+**Technical:**
+- ✅ Upload 10MB PDF → processed in <30 seconds
+- ✅ Ask question → first response chunk in <2 seconds
+- ✅ Streaming feels smooth (no lag)
+- ✅ Citations accurate (manual spot-check 10 questions)
+- ✅ Works on mobile (responsive)
+
+**Portfolio:**
+- ✅ Live demo URL (chatpdf.abhishek.oxalate.com)
+- ✅ GitHub repo with good README
+- ✅ Can explain architecture in interview
+- ✅ Can show in Oxalate sales calls
+
+**Monetization (Phase 2, not now):**
+- Week 4: Add auth (email/password)
+- Week 6: Add Stripe payment
+- Week 8: First 10 paying users
+
+---
+

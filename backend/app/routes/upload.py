@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Backgro
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import models, schemas
-from ..services.pdf_processor import PDFProcessor
+from ..services.document_processor import DocumentProcessor
 from ..services.embeddings import embedding_service
 from ..services.vector_store import vector_store
 import uuid
@@ -16,18 +16,19 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
-async def process_pdf_background(doc_id: str, filename: str, file_path: str, db: Session):
+async def process_document_background(doc_id: str, filename: str, file_path: str, db: Session):
+    """Background task to process any document type."""
     try:
-        # 1. Extract text and pages
-        doc_data = PDFProcessor.extract_pages(file_path)
+        # 1. Extract text and pages/sections
+        doc_data = DocumentProcessor.extract_pages(file_path)
         
         all_chunks = []
         all_embeddings = []
         all_metadatas = []
         
-        # 2. Process each page
+        # 2. Process each page/section
         for page in doc_data:
-            chunks = PDFProcessor.chunk_text(page["content"])
+            chunks = DocumentProcessor.chunk_text(page["content"])
             if not chunks:
                 continue
                 
@@ -67,15 +68,13 @@ async def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    # 1. Validate file extension and magic bytes
-    if not file.filename.endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-    
-    # Read the first few bytes to check for PDF magic number
-    header = await file.read(4)
-    await file.seek(0) # Reset file pointer
-    if header != b"%PDF":
-        raise HTTPException(status_code=400, detail="Invalid PDF file content")
+    # 1. Validate file type
+    if not DocumentProcessor.is_supported(file.filename):
+        supported = ", ".join(DocumentProcessor.SUPPORTED_EXTENSIONS.keys())
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unsupported file type. Supported formats: {supported}"
+        )
 
     # 2. Validate file size (FastAPI doesn't do this automatically for SpoofFile)
     # We can check content length if provided, or read a bit
@@ -95,7 +94,7 @@ async def upload_document(
             f.write(content)
             
         # 3. Get metadata
-        metadata = PDFProcessor.get_metadata(str(file_path))
+        metadata = DocumentProcessor.get_metadata(str(file_path))
         
         # 4. Create database entry
         db_doc = models.Document(
@@ -104,7 +103,7 @@ async def upload_document(
             original_filename=file.filename,
             file_path=str(file_path),
             file_size=metadata["file_size"],
-            page_count=metadata["page_count"],
+            page_count=metadata.get("page_count", 1),
             processed=False
         )
         db.add(db_doc)
@@ -112,7 +111,13 @@ async def upload_document(
         db.refresh(db_doc)
 
         # 5. Queue background processing
-        background_tasks.add_task(process_pdf_background, file_id, file.filename, str(file_path), db)
+        background_tasks.add_task(
+            process_document_background, 
+            file_id, 
+            file.filename, 
+            str(file_path), 
+            db
+        )
 
         return {
             "document_id": file_id,

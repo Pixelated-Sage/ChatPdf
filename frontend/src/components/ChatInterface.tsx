@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, User, Bot, Quote, Copy, Download, Loader2, Info, MessageCircle, Sparkles, RefreshCcw } from 'lucide-react';
+import { Send, User, Bot, Quote, Copy, Download, Loader2, Info, MessageCircle, Sparkles, RefreshCcw, Upload, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore, Message } from '@/store/useChatStore';
 import { cn } from '@/lib/utils';
@@ -204,37 +205,68 @@ export const ChatInterface = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center justify-center space-y-6 pt-12"
                 >
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/30 transition-all duration-500" />
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-secondary border border-border shadow-xl">
-                      <Sparkles size={32} className="text-primary" />
-                    </div>
-                  </div>
-                  
-                  <div className="text-center max-w-md space-y-2">
-                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Knowledge Assistant</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Ask questions about your uploaded PDFs. I can summarize, compare, and cite specific pages.
-                    </p>
-                  </div>
+                  {/* Check if there are any ready documents */}
+                  {documents.filter(d => d.status === 'ready').length === 0 ? (
+                    // No Documents State
+                    <>
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-amber-500/20 blur-2xl rounded-full group-hover:bg-amber-500/30 transition-all duration-500" />
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-secondary border border-amber-500/30 shadow-xl">
+                          <FileText size={32} className="text-amber-500" />
+                        </div>
+                      </div>
+                      
+                      <div className="text-center max-w-md space-y-2">
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">No Documents Yet</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Upload your first PDF to start chatting. I can answer questions, summarize, and find specific information.
+                        </p>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-3 w-full max-w-lg mt-8">
-                    {[
-                      { l: 'Summarize key insights', i: <Info size={14} /> },
-                      { l: 'Identify risks & terms', i: <Info size={14} /> },
-                      { l: 'Compare documents', i: <RefreshCcw size={14} /> },
-                      { l: 'Find specific data', i: <Sparkles size={14} /> }
-                    ].map((hint) => (
-                      <button 
-                        key={hint.l}
-                        onClick={() => setInput(hint.l)}
-                        className="flex items-center gap-2 px-4 py-3 text-xs font-medium rounded-xl border border-border bg-card/50 hover:bg-accent hover:border-primary/30 transition-all text-left group"
+                      <Link 
+                        href="/upload"
+                        className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:scale-105 hover:bg-primary/90 transition-all"
                       >
-                       <span className="text-muted-foreground group-hover:text-primary transition-colors">{hint.i}</span> 
-                       {hint.l}
-                      </button>
-                    ))}
-                  </div>
+                        <Upload size={18} />
+                        Upload PDFs
+                      </Link>
+                    </>
+                  ) : (
+                    // Has Documents - Show Chat Prompts
+                    <>
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/30 transition-all duration-500" />
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-secondary border border-border shadow-xl">
+                          <Sparkles size={32} className="text-primary" />
+                        </div>
+                      </div>
+                      
+                      <div className="text-center max-w-md space-y-2">
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Knowledge Assistant</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Ask questions about your uploaded PDFs. I can summarize, compare, and cite specific pages.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 w-full max-w-lg mt-8">
+                        {[
+                          { l: 'Summarize key insights', i: <Info size={14} /> },
+                          { l: 'Identify risks & terms', i: <Info size={14} /> },
+                          { l: 'Compare documents', i: <RefreshCcw size={14} /> },
+                          { l: 'Find specific data', i: <Sparkles size={14} /> }
+                        ].map((hint) => (
+                          <button 
+                            key={hint.l}
+                            onClick={() => setInput(hint.l)}
+                            className="flex items-center gap-2 px-4 py-3 text-xs font-medium rounded-xl border border-border bg-card/50 hover:bg-accent hover:border-primary/30 transition-all text-left group"
+                          >
+                           <span className="text-muted-foreground group-hover:text-primary transition-colors">{hint.i}</span> 
+                           {hint.l}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               )}
 
