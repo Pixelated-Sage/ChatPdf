@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
+    # CORS
+    frontend_url: str = "http://localhost:3000"
+    
+    # Server
+    port: int = 8000
+    
     # App Info
     app_name: str = "ChatPDF API"
     app_version: str = "2.0.0"

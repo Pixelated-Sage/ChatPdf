@@ -105,6 +105,46 @@ ChatDoc is a full-stack application that allows you to upload multiple documents
 └── Checklist.md            # Project Roadmap
 ```
 
+## 🚀 Deployment
+
+### Quick Deploy
+
+**Backend (Railway)** + **Frontend (Vercel)** = Production Ready
+
+See detailed guides:
+
+- 📖 [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Complete deployment guide with troubleshooting
+- ✅ [**DEPLOY_CHECKLIST.md**](./DEPLOY_CHECKLIST.md) - Quick reference checklist
+
+### Requirements
+
+- GitHub account
+- [Railway](https://railway.app) account (Free tier: $5 credit/month)
+- [Vercel](https://vercel.com) account (Free tier: Generous limits)
+- [Google Gemini API Key](https://aistudio.google.com) (Free tier available)
+
+### One-Line Deploy Summary
+
+```bash
+# 1. Push to GitHub
+git push origin main
+
+# 2. Deploy Backend to Railway
+# - Connect GitHub repo
+# - Set env: GEMINI_API_KEY, FRONTEND_URL
+# - Auto-deploy on push
+
+# 3. Deploy Frontend to Vercel
+# - Connect GitHub repo
+# - Set env: NEXT_PUBLIC_API_URL
+# - Auto-deploy on push
+```
+
+**Estimated Setup Time**: 15 minutes
+**Cost**: Free (within tier limits)
+
+For detailed step-by-step instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## ⚖️ License
 
 MIT

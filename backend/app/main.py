@@ -46,11 +46,10 @@ app = FastAPI(
 )
 
 # CORS Configuration
-# CORS Configuration
 # Allow any localhost port for development and the production domain
 allow_origin_regex = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 origins = [
-    "https://chatpdf.vercel.app",
+    settings.frontend_url,  # From .env - production frontend URL
 ]
 
 app.add_middleware(
