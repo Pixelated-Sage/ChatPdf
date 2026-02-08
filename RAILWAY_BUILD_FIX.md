@@ -11,62 +11,66 @@ mkdir: cannot create directory 'uploads': File exists
 
 ## Root Cause
 
-The `uploads/` directory already exists after `COPY . .` step because:
+The `uploads/` directory already existed after `COPY . .` step because:
 
 1. Git tracked the `uploads/.gitkeep` file
 2. The directory was copied into the container
-3. `mkdir -p` failed despite the `-p` flag (possibly due to permissions)
+3. `mkdir -p` failed with "File exists" error
 
-## Solution Applied
+## Solution Applied (Final Fix)
 
-Changed Dockerfile line from:
+**Changed from Dockerfile creation to runtime creation:**
 
-```dockerfile
-RUN mkdir -p uploads
-```
-
-To:
+### 1. Removed mkdir from Dockerfile
 
 ```dockerfile
-RUN mkdir -p uploads || true
+# Deleted this line entirely:
+# RUN mkdir -p uploads || true
 ```
 
-The `|| true` ensures the command succeeds even if the directory already exists.
+### 2. Excluded uploads from Docker build
+
+`.dockerignore`:
+
+```dockerignore
+uploads  # Completely excluded from COPY
+```
+
+### 3. Create directory at application startup
+
+`app/main.py`:
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create uploads directory if it doesn't exist
+    os.makedirs(settings.upload_directory, exist_ok=True)
+    print(f"✅ Uploads directory ready: {settings.upload_directory}")
+    # ... rest of startup
+```
+
+**Why this works:**
+
+- Uploads directory is NOT copied into Docker image
+- Directory is created when the app starts
+- No file conflicts during build
+- Cleaner separation of concerns
 
 ## Status
 
-✅ **FIXED** - Committed and pushed to main branch
+✅ **FIXED** - Committed and pushed to main branch (commit `133e44f`)
 
 Railway will auto-redeploy with the fix.
 
 ---
 
-## Alternative Solutions (Not Used)
+## Changes Summary
 
-### Option 1: Exclude from .dockerignore
+**Files Modified:**
 
-```dockerignore
-uploads/
-```
-
-**Downside:** Loses .gitkeep file, may need runtime directory creation
-
-### Option 2: Conditional mkdir
-
-```dockerfile
-RUN [ ! -d "uploads" ] && mkdir uploads || true
-```
-
-**Downside:** More complex, same result
-
-### Option 3: Remove from Git
-
-```bash
-git rm -r uploads/
-git commit -m "Remove uploads directory"
-```
-
-**Downside:** Loses directory structure in repo
+- `backend/Dockerfile` - Removed `RUN mkdir -p uploads`
+- `backend/.dockerignore` - Changed `uploads/*` to `uploads`
+- `backend/app/main.py` - Added `os.makedirs()` at startup
 
 ---
 
@@ -79,6 +83,12 @@ curl https://your-backend.railway.app/health
 ```
 
 Should return `"storage": {"status": "healthy"}`
+
+You should also see in Railway logs:
+
+```
+✅ Uploads directory ready: ./uploads
+```
 
 ---
 
