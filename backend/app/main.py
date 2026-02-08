@@ -18,6 +18,10 @@ async def lifespan(app: FastAPI):
     # Startup
     print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
     
+    # Create uploads directory if it doesn't exist
+    os.makedirs(settings.upload_directory, exist_ok=True)
+    print(f"✅ Uploads directory ready: {settings.upload_directory}")
+    
     # Create database tables
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created")

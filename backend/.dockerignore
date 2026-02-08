@@ -8,8 +8,7 @@ __pycache__
 .git
 .gitignore
 *.db
-uploads/*
-!uploads/.gitkeep
+uploads
 chroma_db
 .pytest_cache
 .coverage
