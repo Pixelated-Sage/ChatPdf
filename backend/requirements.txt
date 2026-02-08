@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+python-multipart
+PyPDF2
+langchain
+langchain-text-splitters
+sentence-transformers
+qdrant-client
+google-genai
+python-dotenv
+psycopg2-binary
+alembic
