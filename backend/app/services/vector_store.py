@@ -36,11 +36,25 @@ class VectorStore:
         self.client = chromadb.PersistentClient(path=str(persist_path))
         
         # Use our custom embedding function
-        self.collection = self.client.get_or_create_collection(
-            name="document_chunks",
-            metadata={"hnsw:space": "cosine"},
-            embedding_function=GeminiEmbeddingFunction()
-        )
+        try:
+            self.collection = self.client.get_or_create_collection(
+                name="document_chunks",
+                metadata={"hnsw:space": "cosine"},
+                embedding_function=GeminiEmbeddingFunction()
+            )
+        except ValueError as e:
+            # Handle migration from default/old embedding function to new key
+            if "Embedding function conflict" in str(e):
+                print("⚠️  Embedding function changed (Migration to Gemini). Resetting collection...")
+                self.client.delete_collection("document_chunks")
+                # Recreate with new function
+                self.collection = self.client.create_collection(
+                    name="document_chunks",
+                    metadata={"hnsw:space": "cosine"},
+                    embedding_function=GeminiEmbeddingFunction()
+                )
+            else:
+                raise e
 
 
     def add_chunks(

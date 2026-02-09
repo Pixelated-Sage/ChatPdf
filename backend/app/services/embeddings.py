@@ -1,35 +1,38 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import time
-import warnings
-from typing import List
+from typing import List, Union
 from dotenv import load_dotenv
+from ..config import settings
 
 load_dotenv()
 
-# Suppress the FutureWarnings from Google's SDK about deprecation
-# We will migrate to google.genai v1.0 in a future update
-warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
-
-# Configure Gemini
-# We reuse the key from the environment
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 class EmbeddingService:
     def __init__(self):
-        # No local model to load! 🚀
-        self.model_name = "models/embedding-001"
-        print(f"Initialized Gemini Embedding Service with {self.model_name}")
+        # Initialize the new GenAI Client
+        if not settings.gemini_api_key:
+             # Fallback to os.getenv if settings not ready (though settings should handle it)
+             self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        else:
+             self.client = genai.Client(api_key=settings.gemini_api_key)
+             
+        self.model_name = "models/text-embedding-004" # Using newer persistent model if available, or embedding-001
+        print(f"Initialized Gemini Embedding Service (google.genai) with {self.model_name}")
 
     def embed_text(self, text: str, task_type: str = "retrieval_query") -> List[float]:
         """Embed a single string (query or document)."""
         try:
-            result = genai.embed_content(
+            # New SDK usage
+            response = self.client.models.embed_content(
                 model=self.model_name,
-                content=text,
-                task_type=task_type
+                contents=text,
+                config=types.EmbedContentConfig(
+                    task_type=task_type
+                )
             )
-            return result['embedding']
+            return response.embeddings[0].values
         except Exception as e:
             print(f"Error embedding text: {e}")
             return [0.0] * 768
@@ -42,21 +45,18 @@ class EmbeddingService:
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i:i + batch_size]
             try:
-                result = genai.embed_content(
+                response = self.client.models.embed_content(
                     model=self.model_name,
-                    content=batch,
-                    task_type="retrieval_document"
+                    contents=batch,
+                    config=types.EmbedContentConfig(
+                        task_type="retrieval_document"
+                    )
                 )
                 
-                # Handle response structure
-                if 'embedding' in result:
-                    e = result['embedding']
-                    # If we got a list of lists, extend. If we got one list (float), append.
-                    # But batch request usually returns list of embeddings.
-                    if e and isinstance(e[0], list):
-                        embeddings.extend(e)
-                    else:
-                        embeddings.append(e)
+                # New SDK returns a list of embedding objects
+                if response.embeddings:
+                    batch_embeddings = [emb.values for emb in response.embeddings]
+                    embeddings.extend(batch_embeddings)
                     
                 time.sleep(0.5)
                 
