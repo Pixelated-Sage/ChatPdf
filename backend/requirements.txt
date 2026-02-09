@@ -12,6 +12,7 @@ langchain
 langchain-text-splitters
 chromadb
 google-generativeai
+google-genai
 requests
 python-dotenv
 alembic
