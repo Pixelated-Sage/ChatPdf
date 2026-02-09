@@ -10,10 +10,8 @@ beautifulsoup4
 lxml
 langchain
 langchain-text-splitters
-sentence-transformers
-
 chromadb
-google-genai
+google-generativeai
 requests
 python-dotenv
 alembic

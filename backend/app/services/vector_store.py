@@ -15,7 +15,13 @@ from typing import List, Dict, Any
 from pathlib import Path
 
 from ..config import settings
+from ..services.embeddings import embedding_service
 
+# Define a custom embedding function for Chroma that uses our Gemini service
+# This prevents Chroma from trying to load sentence-transformers (which we removed)
+class GeminiEmbeddingFunction:
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        return embedding_service.embed_chunks(input)
 
 class VectorStore:
     def __init__(self):
@@ -25,10 +31,14 @@ class VectorStore:
         
         # Initialize persistent client
         self.client = chromadb.PersistentClient(path=str(persist_path))
+        
+        # Use our custom embedding function
         self.collection = self.client.get_or_create_collection(
             name="document_chunks",
-            metadata={"hnsw:space": "cosine"}
+            metadata={"hnsw:space": "cosine"},
+            embedding_function=GeminiEmbeddingFunction()
         )
+
 
     def add_chunks(
         self, 
