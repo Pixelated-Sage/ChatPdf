@@ -11,7 +11,7 @@ lxml
 langchain
 langchain-text-splitters
 sentence-transformers
-pysqlite3-binary
+
 chromadb
 google-genai
 requests
