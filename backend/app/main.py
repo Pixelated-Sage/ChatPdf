@@ -53,7 +53,9 @@ app = FastAPI(
 # Allow any localhost port for development and the production domain
 allow_origin_regex = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 origins = [
-    settings.frontend_url,  # From .env - production frontend URL
+    "http://localhost:3000",
+    "https://chat-pdf-neon.vercel.app", # Explicitly allow production frontend
+    settings.frontend_url,
 ]
 
 app.add_middleware(
