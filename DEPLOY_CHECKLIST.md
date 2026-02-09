@@ -36,7 +36,7 @@ PORT=8000
 
 ```bash
 # 1. Update .env.local with Railway URL
-echo "NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api" > frontend/.env.local
+echo "NEXT_PUBLIC_API_URL=https://your-backend.railway.app" > frontend/.env.local
 
 # 2. Test locally first
 cd frontend
@@ -53,7 +53,7 @@ git push origin main
 # 6. Root Directory: frontend (if monorepo)
 
 # 7. Add environment variable in Vercel:
-NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api
+NEXT_PUBLIC_API_URL=https://your-backend.railway.app
 
 # 8. Click Deploy
 # 9. Copy Vercel URL

@@ -22,6 +22,14 @@ The build failure was likely caused by **image size bloat** or **dependency conf
   CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
   ```
 
+### 4. Embedding Model Caching
+
+- **Problem**: The application was attempting to download the embedding model at runtime, causing memory spikes and "Killed" errors during startup.
+- **Fix**: Updated `Dockerfile` to pre-download the model (`all-MiniLM-L6-v2`) into the image during build.
+  ```dockerfile
+  RUN python -c "from sentence_transformers import SentenceTransformer; model = SentenceTransformer('all-MiniLM-L6-v2'); model.save('./models/embeddings/all-MiniLM-L6-v2')"
+  ```
+
 ## 📋 Next Steps
 
 1. **Commit & Push**:
