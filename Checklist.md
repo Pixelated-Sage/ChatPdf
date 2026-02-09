@@ -39,7 +39,7 @@ All items already implemented:
 ### ✅ Already Working (Keep)
 
 - [x] Text chunking with LangChain
-- [x] Local embeddings (sentence-transformers/all-MiniLM-L6-v2)
+- [x] Gemini Embeddings (migrated from local sentence-transformers)
 - [x] Streaming chat endpoint (`POST /api/chat` via SSE)
 - [x] Citation parsing (regex-based)
 - [x] Conversation persistence
@@ -121,3 +121,9 @@ All items already implemented:
 - Consolidated file, vector, and DB deletion logic
 
 See [DEPLOY_FIX.md](./DEPLOY_FIX.md) and [STORAGE_MANAGEMENT.md](./STORAGE_MANAGEMENT.md) for details.
+
+### 🧹 Tech Debt Cleanup (Feb 9, 2026) — PENDING
+
+| Task                                                              | File(s)                   | Priority |
+| ----------------------------------------------------------------- | ------------------------- | -------- |
+| [ ] Migrate from `google.generativeai` to `google.genai` SDK v1.0 | `llm.py`, `embeddings.py` | P1       |

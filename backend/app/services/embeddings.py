@@ -1,10 +1,15 @@
 import google.generativeai as genai
 import os
 import time
+import warnings
 from typing import List
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Suppress the FutureWarnings from Google's SDK about deprecation
+# We will migrate to google.genai v1.0 in a future update
+warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
 
 # Configure Gemini
 # We reuse the key from the environment
