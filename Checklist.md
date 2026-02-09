@@ -126,4 +126,4 @@ See [DEPLOY_FIX.md](./DEPLOY_FIX.md) and [STORAGE_MANAGEMENT.md](./STORAGE_MANAG
 
 | Task                                                              | File(s)                   | Priority |
 | ----------------------------------------------------------------- | ------------------------- | -------- |
-| [ ] Migrate from `google.generativeai` to `google.genai` SDK v1.0 | `llm.py`, `embeddings.py` | P1       |
+| [x] Migrate from `google.generativeai` to `google.genai` SDK v1.0 | `llm.py`, `embeddings.py` | P1       |
