@@ -22,6 +22,9 @@ from ..services.embeddings import embedding_service
 class GeminiEmbeddingFunction:
     def __call__(self, input: List[str]) -> List[List[float]]:
         return embedding_service.embed_chunks(input)
+        
+    def name(self) -> str:
+        return "gemini_embedding_001"
 
 class VectorStore:
     def __init__(self):
