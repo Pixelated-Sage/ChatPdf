@@ -4,21 +4,33 @@ from typing import List
 import os
 
 # CRITICAL: Load model once, reuse
-# Global rules say store models in /data/models
+# Global rules say store models in /data/models, BUT fallback to local for containers
 MODEL_NAME = 'all-MiniLM-L6-v2'
-MODEL_DIR = Path("/data/models/embeddings")
+
+# Check if we are in a container or if /data exists
+if os.path.exists("/data/models"):
+    MODEL_DIR = Path("/data/models/embeddings")
+else:
+    # Fallback to local app directory for container/deployment
+    MODEL_DIR = Path("./models/embeddings")
+
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 MODEL_PATH = MODEL_DIR / MODEL_NAME
 
 class EmbeddingService:
     def __init__(self):
-        if not MODEL_PATH.exists():
-            print(f"Downloading model {MODEL_NAME} to {MODEL_PATH}...")
+        try:
+            if MODEL_PATH.exists():
+                print(f"Loading model from {MODEL_PATH}...")
+                self.model = SentenceTransformer(str(MODEL_PATH))
+            else:
+                print(f"Downloading model {MODEL_NAME} to {MODEL_PATH}...")
+                self.model = SentenceTransformer(MODEL_NAME)
+                self.model.save(str(MODEL_PATH))
+        except Exception as e:
+            print(f"Error loading model from {MODEL_PATH}, falling back to default cache: {e}")
             self.model = SentenceTransformer(MODEL_NAME)
-            self.model.save(str(MODEL_PATH))
-        else:
-            print(f"Loading model from {MODEL_PATH}...")
-            self.model = SentenceTransformer(str(MODEL_PATH))
+
 
     def embed_text(self, text: str) -> List[float]:
         """Embed a single string."""

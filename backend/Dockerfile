@@ -19,6 +19,12 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download the embedding model to avoid runtime downloads/OOM
+# This ensures faster startup and reliability
+RUN python -c "from sentence_transformers import SentenceTransformer; \
+    model = SentenceTransformer('all-MiniLM-L6-v2'); \
+    model.save('./models/embeddings/all-MiniLM-L6-v2')"
+
 # Copy application code
 COPY . .
 
