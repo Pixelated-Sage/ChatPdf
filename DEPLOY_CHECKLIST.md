@@ -20,7 +20,7 @@ DATABASE_URL=sqlite:///./chatpdf.db
 UPLOAD_DIRECTORY=./uploads
 MAX_FILE_SIZE=10000000
 SECRET_KEY=<generate with: openssl rand -hex 32>
-FRONTEND_URL=https://your-app.vercel.ap
+FRONTEND_URL=https://your-app.vercel.app
 PORT=8000
 
 # 6. Wait for deployment (~3-5 minutes)

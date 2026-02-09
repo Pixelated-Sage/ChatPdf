@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./chatpdf.db"
     
     # Vector Store (ChromaDB)
-    chroma_persist_dir: str = "/data/chroma_db"
+    chroma_persist_dir: str = "./chroma_db"
     
     # Gemini LLM
     gemini_api_key: str = ""
