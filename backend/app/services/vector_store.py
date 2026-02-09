@@ -1,7 +1,15 @@
 """
-Vector Store using ChromaDB for ChatPDF
+vector_store.py
 Embedded mode - no external server required
 """
+# Fix for ChromaDB + Railway (requires SQLite > 3.35)
+import sys
+try:
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
+
 import chromadb
 from typing import List, Dict, Any
 from pathlib import Path
