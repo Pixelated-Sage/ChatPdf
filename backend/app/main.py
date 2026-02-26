@@ -51,10 +51,11 @@ app = FastAPI(
 
 # CORS Configuration
 # Allow any localhost port for development and the production domain
-allow_origin_regex = r"^(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)$"
+allow_origin_regex = r"^(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app|https://.*\.oxlate\.com)$"
 origins = [
     "http://localhost:3000",
-    "https://chat-pdf-neon.vercel.app", # Explicitly allow production frontend
+    "https://chat-pdf-two-omega.vercel.app", # Explicitly allow new Vercel frontend
+    "https://chatpdf.oxlate.com", # Allow custom oxlate domain
     settings.frontend_url,
 ]
 
