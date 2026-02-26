@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const isProd = process.env.NODE_ENV === 'production';
+const defaultApiUrl = isProd ? 'https://chatpdf-backend-pdiy.onrender.com' : 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || defaultApiUrl;
 
 // Supported document formats
 export const SUPPORTED_FORMATS = {
