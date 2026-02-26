@@ -1,25 +1,29 @@
 # Final Deployment Configuration Guide
 
-Your application is ready for production. To make it go live, follow these exact steps to link your Vercel Frontend and Railway Backend.
+Your application is ready for production. To make it go live, follow these exact steps to link your Vercel Frontend and Render Backend.
 
-## 1. Backend Configuration (Railway)
+## 1. Backend Configuration (Render)
 
-**URL:** `https://chatpdf-production-ba7f.up.railway.app/`
+**URL:** `https://your-backend-app.onrender.com`
 
-Go to your Railway Project Dashboard -> Settings -> Environment Variables.
-Ensure the following variables are set:
+We have provided a `render.yaml` Blueprint file at the root of the project to make this easy.
 
-| Variable         | Value                              | Description                                 |
-| :--------------- | :--------------------------------- | :------------------------------------------ |
-| `FRONTEND_URL`   | `https://chat-pdf-neon.vercel.app` | Whitelists your frontend for CORS requests. |
-| `GEMINI_API_KEY` | `...`                              | Your Google Gemini API Key.                 |
-| `PORT`           | `8000`                             | (Optional, Railway sets this automatically) |
+1. Go to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New** -> **Blueprint**.
+3. Connect your GitHub repository containing this code.
+4. Render will automatically detect the `chatpdf-backend` web service.
+5. Provide the sensitive environment variables during the setup when prompted:
+   - `GEMINI_API_KEY`: `Your Google Gemini API Key`
+   - `FRONTEND_URL`: `https://chat-pdf-neon.vercel.app` (or your actual Vercel domain)
+
+> **Important Note regarding Storage on Render's Free Tier**
+> Render's Free Instance Plan operates with ephemeral storage. This means every time Render deploys or restarts the app (which happens daily when inactive), any uploaded PDFs, ChromaDB indexes, and the SQLite database (`/data`) will be wiped. If you want persistent storage, you will need to upgrade to at least a paid Starter plan and attach a Disk (uncomment the `disk` section in `render.yaml`).
 
 **Status:**
 
-- ✅ CORS is pre-configured to allow `https://chat-pdf-neon.vercel.app` even if `FRONTEND_URL` is missing (fallback added).
-- ✅ Heavy dependencies (PyTorch) removed for fast startup.
-- ✅ Dockerfile uses correct port binding.
+- ✅ CORS is pre-configured to allow Vercel domains even if `FRONTEND_URL` is omitted (fallback added).
+- ✅ Heavy dependencies removed for smaller build size.
+- ✅ `render.yaml` automates the Docker deployment!
 
 ---
 
@@ -30,9 +34,9 @@ Ensure the following variables are set:
 Go to your Vercel Project Dashboard -> Settings -> Environment Variables.
 Add the following variable:
 
-| Variable              | Value                                            | Description                                                      |
-| :-------------------- | :----------------------------------------------- | :--------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL` | `https://chatpdf-production-ba7f.up.railway.app` | Points the frontend to your live backend. **No trailing slash.** |
+| Variable              | Value                                   | Description                                                      |
+| :-------------------- | :-------------------------------------- | :--------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL` | `https://your-backend-app.onrender.com` | Points the frontend to your live backend. **No trailing slash.** |
 
 **Important:**
 
@@ -56,7 +60,7 @@ If you see any issues, check the browser console (F12) for CORS errors or Networ
 ## Summary of Changes Made
 
 1. **Backend**:
-   - Migrated to `google-genai` v1.0 SDK.
+   - Swapped Railway configuration for a Render Blueprint (`render.yaml`).
    - Added automatic Vector DB reset migration (handles the "function conflict" error).
    - Hardcoded Vercel URL in CORS origins as a safety fallback.
 2. **Frontend**:
